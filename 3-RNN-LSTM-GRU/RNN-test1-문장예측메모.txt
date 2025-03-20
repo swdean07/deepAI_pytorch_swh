@@ -1,0 +1,164 @@
+
+
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import Dataset, DataLoader
+import numpy as np
+
+# ✅ 한국어 문장 예제 데이터셋
+corpus = [
+    "나는 너를 사랑해",
+    "나는 코딩을 좋아해",
+    "너는 나를 좋아해",
+    "너는 파이썬을 공부해",
+    "우리는 인공지능을 연구해",
+    "딥러닝은 재미있어",
+    "파이썬은 강력해",
+    "나는 자연어처리를 공부해",
+]
+
+# ✅ 단어 사전 만들기
+word_list = list(set(" ".join(corpus).split()))
+word_dict = {w: i for i, w in enumerate(word_list)}
+idx_dict = {i: w for w, i in word_dict.items()}
+
+# ✅ 데이터셋 변환
+def make_data(corpus):
+    inputs, targets = [], []
+    for sentence in corpus:
+        words = sentence.split()
+        for i in range(len(words) - 1):  # "나는 너를" -> "사랑해"
+            x = [word_dict[w] for w in words[:i+1]]
+            y = word_dict[words[i+1]]
+            inputs.append(x)
+            targets.append(y)
+
+    return inputs, targets
+
+inputs, targets = make_data(corpus)
+
+# ✅ 패딩 추가 (문장 길이를 맞춤)
+max_len = max(len(seq) for seq in inputs)
+inputs_padded = [seq + [0] * (max_len - len(seq)) for seq in inputs]
+targets = torch.tensor(targets, dtype=torch.long)
+
+# ✅ 데이터셋 및 DataLoader 생성
+class TextDataset(Dataset):
+    def __init__(self, inputs, targets):
+        self.inputs = torch.tensor(inputs, dtype=torch.long)
+        self.targets = targets
+
+    def __len__(self):
+        return len(self.inputs)
+
+    def __getitem__(self, idx):
+        return self.inputs[idx], self.targets[idx]
+
+dataset = TextDataset(inputs_padded, targets)
+train_loader = DataLoader(dataset, batch_size=2, shuffle=True)
+
+vocab_size = len(word_dict)  # 단어 개수
+embed_size = 10  # 임베딩 차원
+hidden_size = 16  # RNN 은닉층 크기
+num_classes = len(word_dict)  # 예측할 단어 개수
+2️ RNN 모델 정의
+
+
+
+class RNNTextModel(nn.Module):
+    def __init__(self, vocab_size, embed_size, hidden_size, num_classes):
+        super(RNNTextModel, self).__init__()
+        self.embedding = nn.Embedding(vocab_size, embed_size)  # 단어 임베딩
+        self.rnn = nn.RNN(embed_size, hidden_size, batch_first=True)
+        self.fc = nn.Linear(hidden_size, num_classes)
+
+    def forward(self, x):
+        x = self.embedding(x)
+        out, _ = self.rnn(x)
+        out = self.fc(out[:, -1, :])  # 마지막 시점의 RNN 출력을 사용
+        return out
+
+# ✅ 모델 생성
+model = RNNTextModel(vocab_size, embed_size, hidden_size, num_classes)
+
+# ✅ GPU 사용 가능하면 이동
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model.to(device)
+
+# ✅ 손실 함수 및 최적화 함수 설정
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.Adam(model.parameters(), lr=0.01)
+3️ 모델 학습 및 저장
+
+
+
+num_epochs = 100
+print("🚀 RNN 모델 학습 시작...")
+for epoch in range(num_epochs):
+    running_loss = 0.0
+    for i, (inputs, labels) in enumerate(train_loader):
+        inputs, labels = inputs.to(device), labels.to(device)
+
+        optimizer.zero_grad()
+        outputs = model(inputs)
+        loss = criterion(outputs, labels)
+        loss.backward()
+        optimizer.step()
+        running_loss += loss.item()
+
+    if (epoch + 1) % 10 == 0:
+        print(f"Epoch [{epoch+1}/{num_epochs}], Loss: {running_loss / len(train_loader):.4f}")
+
+# ✅ 모델 저장
+model_path = "/content/drive/MyDrive/busanit501-1234/rnn_korean_model.pth"
+torch.save(model.state_dict(), model_path)
+print(f"✅ 학습된 모델이 저장되었습니다: {model_path}")
+4️ 저장된 모델 불러오기
+
+
+
+# ✅ 저장된 RNN 모델 불러오기
+def load_model(model_path, vocab_size, embed_size, hidden_size, num_classes):
+    model = RNNTextModel(vocab_size, embed_size, hidden_size, num_classes)
+    model.load_state_dict(torch.load(model_path, map_location=torch.device("cpu")))
+    model.eval()
+    return model
+
+# ✅ 모델 불러오기
+loaded_model = load_model(model_path, vocab_size, embed_size, hidden_size, num_classes)
+print("✅ 모델이 성공적으로 불러와졌습니다!")
+5️ 샘플 문장 예측 (예측 단어 및 정확도 출력)
+
+
+
+import torch.nn.functional as F
+
+def predict_next_word(model, sentence):
+    """
+    저장된 RNN 모델을 사용하여 주어진 문장의 다음 단어를 예측하는 함수.
+    """
+    # ✅ 입력 문장을 정수 인코딩
+    words = sentence.split()
+    input_seq = [word_dict[w] for w in words if w in word_dict]
+
+    # ✅ 패딩 추가 (길이를 맞추기 위해)
+    input_padded = input_seq + [0] * (max_len - len(input_seq))
+    input_tensor = torch.tensor([input_padded], dtype=torch.long)
+
+    # ✅ 모델 예측
+    with torch.no_grad():
+        output = model(input_tensor)
+        probabilities = F.softmax(output[0], dim=0)
+        predicted_idx = torch.argmax(probabilities).item()
+        confidence = probabilities[predicted_idx].item()
+
+    predicted_word = idx_dict[predicted_idx]
+
+    print(f"🔍 입력 문장: '{sentence}'")
+    print(f"📊 예측된 단어: '{predicted_word}'")
+    print(f"✅ 예측 확률: {confidence * 100:.2f}%")
+
+# 🏆 샘플 문장 예측 실행
+sample_sentence = "나는 너를"
+predict_next_word(loaded_model, sample_sentence)
