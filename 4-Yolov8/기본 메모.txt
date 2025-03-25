@@ -1,0 +1,50 @@
+🚀 YOLOv8 수업 자료
+📌 1. YOLOv8의 역사와 유래
+**YOLO(You Only Look Once)**는 실시간 객체 탐지를 위한 신경망 모델로,
+단 한 번의 신경망 실행으로 객체를 탐지하는 특징을 가집니다.
+
+▶️ YOLO 시리즈 발전 과정
+✅ 2015년 (YOLOv1) - Joseph Redmon이 발표, 최초의 단일 CNN 기반 객체 탐지 모델
+✅ 2016년 (YOLOv2, YOLO9000) - 더 정확하고 빠른 버전, 다중 클래스 탐지 개선
+✅ 2018년 (YOLOv3) - Darknet-53 백본 도입, 작은 객체 탐지 개선
+✅ 2020년 (YOLOv4) - CSPDarknet-53 백본 및 데이터 증강 강화
+✅ 2021년 (YOLOv5) - PyTorch 기반으로 최적화, 더 빠른 학습 및 추론 속도
+✅ 2022년 (YOLOv7) - 더 나은 속도-정확도 균형, 경량화 모델 적용
+✅ 2023년 (YOLOv8) - 최신 기술 적용, AutoAnchor, Mosaic Augmentation, Transformer 기반 모델 활용
+
+📌 2. YOLOv8의 기본 개념 및 정의
+▶️ YOLO란?
+이미지에서 여러 객체를 한 번의 신경망 실행(One Pass) 으로 탐지하는 모델
+Bounding Box(경계 상자) 및 Class(클래스 라벨) 예측
+빠르고 효율적인 End-to-End 방식
+
+▶️ YOLOv8의 주요 특징
+✔️ PyTorch 기반으로 최적화 - 빠른 학습 및 추론 속도
+✔️ Anchor-Free & Anchor-Based 모델 지원
+✔️ Transformer 기반 아키텍처 적용 가능
+✔️ Mosaic Augmentation으로 데이터 증강
+✔️ AutoAnchor - 자동 최적화된 Anchor Box 설정
+
+▶️ YOLOv8 정의 예시
+"YOLOv8은 단일 신경망 패스를 통해 객체를 빠르고 정확하게 탐지하는
+딥러닝 기반 모델이다."
+
+✔️ 예제: 자동차 번호판 인식, CCTV 감시, 자율주행 차량
+
+📌 3. YOLOv8의 원리
+
+▶️ YOLOv8의 동작 과정
+
+1 입력 이미지 (Input Image) 전처리
+2 Feature Extraction (특징 추출) - CNN/Transformer 백본 사용
+3 Bounding Box 예측 - 객체 위치(x, y, w, h) 및 확률 계산
+4 Class Prediction (클래스 분류)
+5 Non-Maximum Suppression(NMS) - 중복 제거
+6 출력 (Detected Objects)
+
+📌 4. 실무 활용 사례
+✅ CCTV 및 보안 시스템 - 실시간 인물 탐지, 행동 분석
+✅ 자율주행 차량 - 보행자, 신호등, 자동차 탐지
+✅ 스포츠 분석 - 선수 움직임 및 공 궤적 추적
+✅ 의료 영상 분석 - CT, MRI에서 이상 징후 탐지
+✅ 드론 비전 - 위험 요소 탐지 및 장애물 회피
